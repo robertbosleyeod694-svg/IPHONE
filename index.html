@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPhone — Полная антология | Интерактивная презентация</title>
+<style>
+  :root {
+    --bg: #030305;
+    --surface: rgba(20, 20, 25, 0.65);
+    --surface-hover: rgba(34, 34, 44, 0.85);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-active: rgba(255, 255, 255, 0.32);
+    --text: #f5f5f7;
+    --text-dim: #86868b;
+    --accent: #2997ff;
+    --accent-glow: rgba(41, 151, 255, 0.35);
+    --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* Фоновый градиент с аппаратным ускорением */
+  .ambient-bg {
+    position: fixed;
+    inset: -20%;
+    background: 
+      radial-gradient(circle at 20% 20%, rgba(41, 151, 255, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.07) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, #07070b 0%, #020203 100%);
+    z-index: 0;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  /* Экран выбора */
+  #selector-screen {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(24px, 4vw, 48px);
+    transition: opacity 0.85s var(--ease-apple), transform 0.85s var(--ease-apple), filter 0.85s var(--ease-apple);
+    will-change: opacity, transform, filter;
+  }
+
+  #selector-screen.hidden {
+    opacity: 0;
+    transform: scale(1.06);
+    filter: blur(18px);
+    pointer-events: none;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .brand-kicker {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .brand h1 {
+    font-size: clamp(28px, 4vw, 46px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-meta {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  /* Сетка выбора поколения и версии */
+  .configurator {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 32px;
+    flex: 1;
+    margin: 28px 0;
+    min-height: 0;
+  }
+
+  @media (max-width: 920px) {
+    .configurator {
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+    }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 24px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .era-filter {
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .era-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s var(--ease-apple);
+  }
+
+  .era-btn.active {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+
+  /* Список поколений iPhone */
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+  }
+
+  .models-grid::-webkit-scrollbar {
+    width: 5px;
+  }
+  .models-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+  }
+
+  .model-card {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.4s var(--ease-apple), background 0.35s var(--ease-apple), border-color 0.35s var(--ease-apple), box-shadow 0.4s var(--ease-apple);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    will-change: transform;
+  }
+
+  .model-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .model-card.active {
+    background: linear-gradient(145deg, rgba(41, 151, 255, 0.18), rgba(255, 255, 255, 0.05));
+    border-color: var(--accent);
+    box-shadow: 0 8px 28px rgba(41, 151, 255, 0.2);
+    transform: scale(1.02);
+  }
+
+  .model-year {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .model-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+
+  .model-chip-mini {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* Правая панель: выбор модификации и превью */
+  .variant-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .variants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .variant-pill {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.38s var(--ease-apple);
+  }
+
+  .variant-pill:hover {
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateX(4px);
+  }
+
+  .variant-pill.active {
+    background: rgba(255, 255, 255, 0.11);
+    border-color: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .variant-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .variant-title {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .variant-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .variant-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--text-dim);
+    transition: all 0.3s var(--ease-apple);
+  }
+
+  .variant-pill.active .variant-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .summary-box {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .summary-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+  }
+
+  .summary-target {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .summary-tagline {
+    font-size: 13px;
+    color: #a1a1aa;
+    line-height: 1.45;
+  }
+
+  /* Нижняя панель с кнопкой Старт */
+  .footer-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+  }
+
+  .selected-specs-strip {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .selected-specs-strip span strong {
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .btn-start {
+    position: relative;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 999px;
+    padding: 18px 48px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.45s var(--ease-apple), box-shadow 0.45s var(--ease-apple), background 0.3s;
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-start:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 55px rgba(41, 151, 255, 0.55);
+    background: #f0f7ff;
+  }
+
+  .btn-start:active {
+    transform: scale(0.97);
+  }
+
+  /* =========================================================
+     ЭКРАН ПРЕЗЕНТАЦИИ (ПОЛНОЭКРАННЫЙ КИНЕМАТОГРАФИЧНЫЙ РЕЖИМ)
+     ========================================================= */
+  #presentation-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.96);
+    transition: opacity 0.95s var(--ease-apple), transform 0.95s var(--ease-apple);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  #presentation-screen.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+  }
+
+  /* Высокопроизводительный 60FPS рендер-холст (видео-симуляция iPhone) */
+  #cinema-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+  }
+
+  /* Элементы управления в правом верхнем углу: Крестик и Пауза */
+  .cinema-controls {
+    position: fixed;
+    top: 28px;
+    right: 28px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .ctrl-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(24, 24, 30, 0.68);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.35s var(--ease-apple), background 0.3s, border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+
+  .ctrl-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.45);
+    transform: scale(1.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .ctrl-btn:active {
+    transform: scale(0.94);
+  }
+
+  .ctrl-btn.paused-active {
+    background: rgba(41, 151, 255, 0.28);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 24px rgba(41, 151, 255, 0.4);
+  }
+
+  .ctrl-tooltip {
+    position: absolute;
+    right: 56px;
+    background: rgba(15, 15, 20, 0.9);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    color: #e5e5ea;
+    opacity: 0;
+    transform: translateX(8px);
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease-apple), transform 0.25s var(--ease-apple);
+  }
+
+  .ctrl-btn:hover .ctrl-tooltip {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Индикатор стоп-кадра */
+  .freeze-badge {
+    position: fixed;
+    top: 34px;
+    left: 36px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(20, 20, 26, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    transition: all 0.4s var(--ease-apple);
+  }
+
+  .freeze-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 10px #30d158;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .freeze-badge.frozen {
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .freeze-badge.frozen .freeze-dot {
+    background: #ff9f0a;
+    box-shadow: 0 0 12px #ff9f0a;
+  }
+
+  /* Контент презентации поверх видеоряда */
+  .presentation-hud {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+    padding: clamp(28px, 5vw, 64px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .slide-header {
+    margin-top: 36px;
+    max-width: 680px;
+  }
+
+  .slide-kicker {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.8s var(--ease-apple), transform 0.8s var(--ease-apple);
+  }
+
+  .slide-title {
+    font-size: clamp(36px, 5.5vw, 72px);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    background: linear-gradient(180deg, #ffffff 10%, rgba(255, 255, 255, 0.62) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s var(--ease-apple) 0.1s, transform 0.9s var(--ease-apple) 0.1s;
+  }
+
+  .slide-subtitle {
+    margin-top: 14px;
+    font-size: clamp(15px, 1.6vw, 20px);
+    color: rgba(245, 245, 247, 0.72);
+    line-height: 1.5;
+    max-width: 540px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.9s var(--ease-apple) 0.2s, transform 0.9s var(--ease-apple) 0.2s;
+  }
+
+  .hud-visible .slide-kicker,
+  .hud-visible .slide-title,
+  .hud-visible .slide-subtitle {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Нижняя сетка характеристик (Bento Specs) */
+  .specs-bento {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 1200px;
+    align-self: center;
+  }
+
+  @media (max-width: 900px) {
+    .specs-bento {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .spec-tile {
+    background: rgba(16, 16, 22, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-radius: 22px;
+    padding: 20px 22px;
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.85s var(--ease-apple), transform 0.85s var(--ease-apple), border-color 0.4s;
+  }
+
+  .hud-visible .spec-tile:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0.25s; }
+  .hud-visible .spec-tile:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.35s; }
+  .hud-visible .spec-tile:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.45s; }
+  .hud-visible .spec-tile:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.55s; }
+
+  .spec-tile-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .spec-tile-value {
+    font-size: clamp(18px, 2vw, 24px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .spec-tile-desc {
+    margin-top: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.58);
+    line-height: 1.4;
+  }
+
+  /* Прогресс-бар сцен в самом низу */
+  .timeline-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 100;
+  }
+
+  .timeline-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), #a855f7, #ffffff);
+    box-shadow: 0 0 16px var(--accent);
+    will-change: width;
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient-bg"></div>
+
+<!-- ЭКРАН ВЫБОРА МОДЕЛИ И ВЕРСИИ -->
+<section id="selector-screen">
+  <header>
+    <div class="brand">
+      <span class="brand-kicker">Apple Hardware Archive • 2007 — 2026</span>
+      <h1>Антология iPhone</h1>
+    </div>
+    <div class="header-meta">
+      <div>Все поколения и модификации</div>
+      <div style="color:#fff; margin-top:4px; font-weight:500;">60 FPS Cinema Engine</div>
+    </div>
+  </header>
+
+  <div class="configurator">
+    <!-- Левая колонка: выбор поколения -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">1. Выберите поколение</span>
+        <div class="era-filter" id="era-filter">
+          <button class="era-btn active" data-era="all">Все</button>
+          <button class="era-btn" data-era="modern">2022–2026</button>
+          <button class="era-btn" data-era="faceid">2017–2021</button>
+          <button class="era-btn" data-era="classic">2007–2016</button>
+        </div>
+      </div>
+      <div class="models-grid" id="models-grid"></div>
+    </div>
+
+    <!-- Правая колонка: выбор версии и сводка -->
+    <div class="panel variant-section">
+      <div>
+        <div class="panel-header">
+          <span class="panel-title">2. Модификация</span>
+          <span id="variants-count" style="font-size:12px; color:var(--text-dim);"></span>
+        </div>
+        <div class="variants-list" id="variants-list"></div>
+      </div>
+
+      <div class="summary-box">
+        <span class="summary-label">Выбранная конфигурация</span>
+        <div class="summary-target" id="summary-target">iPhone 17 Pro Max</div>
+        <div class="summary-tagline" id="summary-tagline">Титановый корпус следующего поколения, чип A19 Pro и перископический телеобъектив.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-action">
+    <div class="selected-specs-strip" id="footer-specs"></div>
+    <button class="btn-start" id="btn-start">Старт презентации</button>
+  </div>
+</section>
+
+<!-- ЭКРАН ПРЕЗЕНТАЦИИ -->
+<section id="presentation-screen">
+  <canvas id="cinema-canvas"></canvas>
+
+  <!-- Статус воспроизведения / стоп-кадра -->
+  <div class="freeze-badge" id="freeze-badge">
+    <span class="freeze-dot"></span>
+    <span id="freeze-text">Воспроизведение • 60 FPS</span>
+  </div>
+
+  <!-- Правый верхний угол: Крестик и Стоп-кадр чуть ниже -->
+  <div class="cinema-controls">
+    <button class="ctrl-btn" id="btn-close" aria-label="Закрыть презентацию">
+      <span class="ctrl-tooltip">Закрыть презентацию</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <button class="ctrl-btn" id="btn-freeze" aria-label="Остановить на текущем кадре">
+      <span class="ctrl-tooltip" id="freeze-tooltip">Стоп-кадр (Пауза)</span>
+      <svg id="icon-pause" width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="6" y="4" width="4" height="16" rx="1.5"></rect>
+        <rect x="14" y="4" width="4" height="16" rx="1.5"></rect>
+      </svg>
+      <svg id="icon-play" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+        <polygon points="6,4 20,12 6,20"></polygon>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Текстовый HUD презентации -->
+  <div class="presentation-hud" id="presentation-hud">
+    <div class="slide-header">
+      <div class="slide-kicker" id="hud-kicker"></div>
+      <h2 class="slide-title" id="hud-title"></h2>
+      <p class="slide-subtitle" id="hud-subtitle"></p>
+    </div>
+
+    <div class="specs-bento" id="hud-bento"></div>
+  </div>
+
+  <div class="timeline-bar">
+    <div class="timeline-fill" id="timeline-fill"></div>
+  </div>
+</section>
+
+<script>
+(() => {
+  'use strict';
+
+  // Полная база всех поколений и модификаций iPhone (2007 - 2026)
+  const IPHONE_DB = [
+    {
+      id: 'iphone-18', year: '2026', era: 'modern', family: 'iPhone 18', chip: 'Apple A20 / A20 Pro',
+      variants: [
+        { name: 'iPhone 18', display: '6.3" Super Retina XDR 120Hz', chip: 'A20 (2 нм)', camera: '48 МП Dual Fusion', body: 'Аэрокосмический алюминий', accent: '#38bdf8', cams: 2, island: true, notch: false, homeBtn: false, color: '#1e293b', tagline: 'Первый базовый iPhone на 2-нм техпроцессе с частотой ProMotion 120 Гц и Apple Intelligence 3.' },
+        { name: 'iPhone 18 Air', display: '6.6" Ultra-Thin OLED 120Hz', chip: 'A20 (2 нм)', camera: '48 МП Single Pro-Lens', body: 'Титан-алюминий 5.4 мм', accent: '#e2e8f0', cams: 1, island: true, notch: false, homeBtn: false, color: '#334155', tagline: 'Невесомый профиль толщиной 5.4 мм с рекордно тонкой рамкой и кремний-углеродной батареей.' },
+        { name: 'iPhone 18 Pro', display: '6.3" LTPO ProMotion 1–120Hz', chip: 'A20 Pro (2 нм)', camera: '48 МП Triple + Under-Display Face ID', body: 'Титан Grade 5', accent: '#f59e0b', cams: 3, island: true, notch: false, homeBtn: false, color: '#292524', tagline: 'Подэкранные датчики Face ID, 12 ГБ ОЗУ и профессиональная запись ProRes Log 8K.' },
+        { name: 'iPhone 18 Pro Max', display: '6.9" LTPO ProMotion 3000 нит', chip: 'A20 Pro (2 нм)', camera: '48 МП Triple Tetraprism 6x', body: 'Титан Grade 5', accent: '#fbbf24', cams: 3, island: true, notch: false, homeBtn: false, color: '#1c1917', tagline: 'Абсолютный флагман 2026 года с 6-кратным оптическим зумом и автономностью до 36 часов видео.' }
+      ]
+    },
+    {
+      id: 'iphone-17', year: '2025', era: 'modern', family: 'iPhone 17', chip: 'Apple A19 / A19 Pro',
+      variants: [
+        { name: 'iPhone 17', display: '6.3" OLED ProMotion 120Hz', chip: 'A19 (3 нм N3P)', camera: '48 МП + 12 МП Ultra Wide', body: 'Алюминий и Ceramic Shield', accent: '#34d399', cams: 2, island: true, notch: false, homeBtn: false, color: '#064e3b', tagline: 'Долгожданный переход базовой линейки на 120 Гц и фронтальная камера 24 МП.' },
+        { name: 'iPhone 17 Air', display: '6.6" OLED 120Hz', chip: 'A19', camera: '48 МП Fusion', body: 'Ультратонкий корпус 5.5 мм', accent: '#93c5fd', cams: 1, island: true, notch: false, homeBtn: false, color: '#1e3a8a', tagline: 'Новый сверхтонкий форм-фактор, заменивший серию Plus.' },
+        { name: 'iPhone 17 Pro', display: '6.3" LTPO Super Retina XDR', chip: 'A19 Pro', camera: 'Три сенсора по 48 МП', body: 'Титан и алюминиевая рама', accent: '#60a5fa', cams: 3, island: true, notch: false, homeBtn: false, color: '#172554', tagline: 'Все три основные камеры получили разрешение 48 мегапикселей.' },
+        { name: 'iPhone 17 Pro Max', display: '6.9" LTPO Super Retina XDR', chip: 'A19 Pro', camera: '48 МП Triple + 5x Telephoto', body: 'Титан Grade 5', accent: '#818cf8', cams: 3, island: true, notch: false, homeBtn: false, color: '#1e1b4b', tagline: 'Максимальный экран 6.9 дюйма, 12 ГБ оперативной памяти и испарительная камера охлаждения.' }
+      ]
+    },
+    {
+      id: 'iphone-16', year: '2024', era: 'modern', family: 'iPhone 16', chip: 'Apple A18 / A18 Pro',
+      variants: [
+        { name: 'iPhone 16', display: '6.1" Super Retina XDR', chip: 'A18', camera: '48 МП Fusion + макро', body: 'Алюминий, Camera Control', accent: '#3b82f6', cams: 2, island: true, notch: false, homeBtn: false, color: '#1d4ed8', tagline: 'Кнопка Camera Control, вертикальный блок камер для пространственного видео и чип A18.' },
+        { name: 'iPhone 16 Plus', display: '6.7" Super Retina XDR', chip: 'A18', camera: '48 МП Fusion + 12 МП', body: 'Алюминий, Camera Control', accent: '#2dd4bf', cams: 2, island: true, notch: false, homeBtn: false, color: '#115e59', tagline: 'Большой 6.7-дюймовый дисплей с выдающейся автономностью и поддержкой Apple Intelligence.' },
+        { name: 'iPhone 16 Pro', display: '6.3" LTPO 120Hz', chip: 'A18 Pro', camera: '48 МП + 48 МП UW + 5x', body: 'Титан Desert / Natural', accent: '#d97706', cams: 3, island: true, notch: false, homeBtn: false, color: '#451a03', tagline: 'Увеличенный до 6.3" дисплей с тончайшими рамками, съёмка 4K 120 к/с Dolby Vision и 5x тетрапризма.' },
+        { name: 'iPhone 16 Pro Max', display: '6.9" LTPO 120Hz', chip: 'A18 Pro', camera: '48 МП Pro Camera System', body: 'Титан Grade 5', accent: '#f59e0b', cams: 3, island: true, notch: false, homeBtn: false, color: '#27272a', tagline: 'Самый большой дисплей в истории iPhone на момент выхода и студийный массив из четырёх микрофонов.' },
+        { name: 'iPhone 16e', display: '6.1" OLED 60Hz', chip: 'A18 (4-core GPU)', camera: '48 МП 2-в-1', body: 'Матовый алюминий, Action Button', accent: '#a1a1aa', cams: 1, island: false, notch: true, homeBtn: false, color: '#18181b', tagline: 'Современный доступный вход в экосистему Apple Intelligence с первым модемом Apple C1.' }
+      ]
+    },
+    {
+      id: 'iphone-15', year: '2023', era: 'modern', family: 'iPhone 15', chip: 'Apple A16 / A17 Pro',
+      variants: [
+        { name: 'iPhone 15', display: '6.1" OLED 2000 нит', chip: 'A16 Bionic', camera: '48 МП Main + 2x Crop', body: 'Матовое стекло, USB-C', accent: '#f472b6', cams: 2, island: true, notch: false, homeBtn: false, color: '#500724', tagline: 'Dynamic Island, разъём USB-C и сенсор 48 МП пришли в базовую модель.' },
+        { name: 'iPhone 15 Plus', display: '6.7" OLED 2000 нит', chip: 'A16 Bionic', camera: '48 МП Main + 12 МП UW', body: 'Матовое стекло, USB-C', accent: '#fb7185', cams: 2, island: true, notch: false, homeBtn: false, color: '#4c0519', tagline: 'Огромный экран и феноменальная живучесть батареи в лёгком алюминиевом корпусе.' },
+        { name: 'iPhone 15 Pro', display: '6.1" LTPO 120Hz', chip: 'A17 Pro (3 нм)', camera: '48 МП + 3x Telephoto', body: 'Титан Grade 5, Action Button', accent: '#94a3b8', cams: 3, island: true, notch: false, homeBtn: false, color: '#1e293b', tagline: 'Первый iPhone в титановом корпусе с кнопкой действия и трассировкой лучей в играх.' },
+        { name: 'iPhone 15 Pro Max', display: '6.7" LTPO 120Hz', chip: 'A17 Pro (3 нм)', camera: '48 МП + 5x Tetraprism', body: 'Титан Grade 5, USB 3 10 Гбит/с', accent: '#cbd5e1', cams: 3, island: true, notch: false, homeBtn: false, color: '#0f172a', tagline: 'Дебют перископического объектива с 5-кратным оптическим приближением (120 мм).' }
+      ]
+    },
+    {
+      id: 'iphone-14', year: '2022', era: 'modern', family: 'iPhone 14', chip: 'Apple A15 / A16 Bionic',
+      variants: [
+        { name: 'iPhone 14', display: '6.1" Super Retina XDR', chip: 'A15 Bionic (5-core GPU)', camera: '12 МП Photonic Engine', body: 'Алюминий, Crash Detection', accent: '#38bdf8', cams: 2, island: false, notch: true, homeBtn: false, color: '#0c4a6e', tagline: 'Спутниковая связь Emergency SOS и улучшенная светосила основной камеры.' },
+        { name: 'iPhone 14 Plus', display: '6.7" Super Retina XDR', chip: 'A15 Bionic', camera: '12 МП Dual System', body: 'Алюминий', accent: '#a855f7', cams: 2, island: false, notch: true, homeBtn: false, color: '#3b0764', tagline: 'Возвращение крупной диагонали в не-Pro линейку без переплаты за титан и телеобъектив.' },
+        { name: 'iPhone 14 Pro', display: '6.1" LTPO Always-On', chip: 'A16 Bionic', camera: '48 МП Quad-Pixel', body: 'Хирургическая сталь', accent: '#c084fc', cams: 3, island: true, notch: false, homeBtn: false, color: '#2e1065', tagline: 'Революционный интерактивный вырез Dynamic Island, Always-On Display и первый сенсор 48 МП.' },
+        { name: 'iPhone 14 Pro Max', display: '6.7" LTPO Always-On', chip: 'A16 Bionic', camera: '48 МП ProRAW', body: 'Хирургическая сталь', accent: '#a855f7', cams: 3, island: true, notch: false, homeBtn: false, color: '#1e1b4b', tagline: 'Культовый цвет Deep Purple, пиковая яркость 2000 нит на солнце и бескомпромиссная мощность.' }
+      ]
+    },
+    {
+      id: 'iphone-13', year: '2021', era: 'faceid', family: 'iPhone 13', chip: 'Apple A15 Bionic',
+      variants: [
+        { name: 'iPhone 13 mini', display: '5.4" Super Retina XDR', chip: 'A15 Bionic', camera: '12 МП Sensor-Shift OIS', body: 'Алюминий, уменьшенная чёлка', accent: '#f43f5e', cams: 2, island: false, notch: true, homeBtn: false, color: '#4c0519', tagline: 'Последний по-настоящему компактный флагман Apple с диагональю 5.4 дюйма.' },
+        { name: 'iPhone 13', display: '6.1" Super Retina XDR', chip: 'A15 Bionic', camera: '12 МП диагональные камеры', body: 'Алюминий', accent: '#10b981', cams: 2, island: false, notch: true, homeBtn: false, color: '#064e3b', tagline: 'Режим «Киноэффект» с переводом фокуса и матричная стабилизация во всех версиях.' },
+        { name: 'iPhone 13 Pro', display: '6.1" ProMotion 120Hz', chip: 'A15 Bionic (5-core)', camera: '12 МП Triple + Макро', body: 'Хирургическая сталь', accent: '#38bdf8', cams: 3, island: false, notch: true, homeBtn: false, color: '#0c4a6e', tagline: 'Первый iPhone с адаптивной частотой обновления экрана ProMotion 120 Гц и макросъёмкой.' },
+        { name: 'iPhone 13 Pro Max', display: '6.7" ProMotion 120Hz', chip: 'A15 Bionic (5-core)', camera: '12 МП Triple + 3x Zoom', body: 'Хирургическая сталь', accent: '#7dd3fc', cams: 3, island: false, notch: true, homeBtn: false, color: '#1e293b', tagline: 'Эталон автономности своего поколения в знаменитом оттенке Sierra Blue.' }
+      ]
+    },
+    {
+      id: 'iphone-12', year: '2020', era: 'faceid', family: 'iPhone 12', chip: 'Apple A14 Bionic',
+      variants: [
+        { name: 'iPhone 12 mini', display: '5.4" OLED', chip: 'A14 Bionic (5 нм)', camera: '12 МП Dual Night Mode', body: 'Плоские грани, MagSafe', accent: '#3b82f6', cams: 2, island: false, notch: true, homeBtn: false, color: '#172554', tagline: 'Самый лёгкий и компактный 5G-смартфон в мире на момент премьеры.' },        { name: 'iPhone 12', display: '6.1" Super Retina XDR', chip: 'A14 Bionic (5 нм)', camera: '12 МП f/1.6', body: 'Алюминий, Ceramic Shield', accent: '#6366f1', cams: 2, island: false, notch: true, homeBtn: false, color: '#1e1b4b', tagline: 'Возвращение легендарных плоских граней, магниты MagSafe и переход всей линейки на OLED.' },
+        { name: 'iPhone 12 Pro', display: '6.1" Super Retina XDR', chip: 'A14 Bionic', camera: '12 МП Triple + LiDAR', body: 'Сталь, цвет Pacific Blue', accent: '#0ea5e9', cams: 3, island: false, notch: true, homeBtn: false, color: '#082f49', tagline: 'Сканер LiDAR для мгновенного автофокуса в темноте и формат Apple ProRAW.' },
+        { name: 'iPhone 12 Pro Max', display: '6.7" Super Retina XDR', chip: 'A14 Bionic', camera: '12 МП увеличенный сенсор', body: 'Хирургическая сталь', accent: '#eab308', cams: 3, island: false, notch: true, homeBtn: false, color: '#27272a', tagline: 'Крупнейший на тот момент iPhone с эксклюзивной стабилизацией сдвигом матрицы.' }
+      ]
+    },
+    {
+      id: 'iphone-11', year: '2019', era: 'faceid', family: 'iPhone 11', chip: 'Apple A13 Bionic',
+      variants: [
+        { name: 'iPhone 11', display: '6.1" Liquid Retina IPS', chip: 'A13 Bionic', camera: '12 МП Wide + Ultra Wide', body: 'Алюминий и глянцевое стекло', accent: '#a7f3d0', cams: 2, island: false, notch: true, homeBtn: false, color: '#064e3b', tagline: 'Народный бестселлер: сверхширокоугольная камера и ночной режим съёмки.' },
+        { name: 'iPhone 11 Pro', display: '5.8" Super Retina XDR OLED', chip: 'A13 Bionic', camera: '12 МП первая тройная камера', body: 'Матовое стекло и сталь', accent: '#34d399', cams: 3, island: false, notch: true, homeBtn: false, color: '#022c22', tagline: 'Первый iPhone с приставкой Pro, тремя камерами и текстурированным матовым стеклом.' },
+        { name: 'iPhone 11 Pro Max', display: '6.5" Super Retina XDR OLED', chip: 'A13 Bionic', camera: '12 МП Triple Deep Fusion', body: 'Сталь, Midnight Green', accent: '#10b981', cams: 3, island: false, notch: true, homeBtn: false, color: '#064e3b', tagline: 'Огромный скачок по времени работы от батареи и эталонная видеосъёмка 4K 60fps.' }
+      ]
+    },
+    {
+      id: 'iphone-xs-xr', year: '2018', era: 'faceid', family: 'iPhone XS / XR', chip: 'Apple A12 Bionic',
+      variants: [
+        { name: 'iPhone XR', display: '6.1" Liquid Retina LCD', chip: 'A12 Bionic (7 нм)', camera: '12 МП Smart HDR', body: 'Алюминий, 6 ярких цветов', accent: '#fb923c', cams: 1, island: false, notch: true, homeBtn: false, color: '#431407', tagline: 'Безрамочный дизайн с Face ID и одной камерой, которая научилась снимать портреты программно.' },
+        { name: 'iPhone XS', display: '5.8" Super Retina OLED', chip: 'A12 Bionic (7 нм)', camera: '12 МП Dual с регулировкой боке', body: 'Сталь, цвет Gold', accent: '#fbbf24', cams: 2, island: false, notch: true, homeBtn: false, color: '#292524', tagline: 'Первый 7-нанометровый процессор в индустрии и поддержка Dual SIM через eSIM.' },
+        { name: 'iPhone XS Max', display: '6.5" Super Retina OLED', chip: 'A12 Bionic (7 нм)', camera: '12 МП Dual Smart HDR', body: 'Хирургическая сталь', accent: '#f59e0b', cams: 2, island: false, notch: true, homeBtn: false, color: '#1c1917', tagline: 'Первый iPhone с гигантским 6.5-дюймовым безрамочным OLED-дисплеем.' }
+      ]
+    },
+    {
+      id: 'iphone-x-8', year: '2017', era: 'faceid', family: 'iPhone X / 8', chip: 'Apple A11 Bionic',
+      variants: [
+        { name: 'iPhone X', display: '5.8" Super Retina OLED', chip: 'A11 Bionic + Neural Engine', camera: '12 МП вертикальный блок', body: 'Нержавеющая сталь', accent: '#e2e8f0', cams: 2, island: false, notch: true, homeBtn: false, color: '#18181b', tagline: 'Юбилейный революционер: отказ от кнопки Home, жесты управления, OLED и Face ID.' },
+        { name: 'iPhone 8', display: '4.7" Retina HD True Tone', chip: 'A11 Bionic', camera: '12 МП OIS', body: 'Стеклянная спинка, Qi зарядка', accent: '#fde68a', cams: 1, island: false, notch: false, homeBtn: true, color: '#292524', tagline: 'Возвращение стеклянной задней панели ради первой беспроводной зарядки Qi.' },
+        { name: 'iPhone 8 Plus', display: '5.5" Retina HD Full HD', chip: 'A11 Bionic', camera: '12 МП Dual Portrait Lighting', body: 'Стекло и алюминий', accent: '#fca5a5', cams: 2, island: false, notch: false, homeBtn: true, color: '#3f1d1d', tagline: 'Классический форм-фактор Plus с мощнейшим чипом A11 и студийным портретным освещением.' }
+      ]
+    },
+    {
+      id: 'iphone-7-se', year: '2016', era: 'classic', family: 'iPhone 7 / SE', chip: 'Apple A10 / A9',
+      variants: [
+        { name: 'iPhone 7', display: '4.7" Retina HD Wide Color', chip: 'A10 Fusion (4 ядра)', camera: '12 МП f/1.8 OIS', body: 'Алюминий IP67, Jet Black', accent: '#94a3b8', cams: 1, island: false, notch: false, homeBtn: true, color: '#09090b', tagline: 'Влагозащита IP67, сенсорная кнопка Home с Taptic Engine, стереодинамики и отказ от mini-jack.' },
+        { name: 'iPhone 7 Plus', display: '5.5" Retina HD', chip: 'A10 Fusion', camera: '12 МП первая двойная камера', body: 'Алюминий IP67', accent: '#64748b', cams: 2, island: false, notch: false, homeBtn: true, color: '#18181b', tagline: 'Первая двойная камера с 2-кратным оптическим зумом и легендарным портретным размытием фона.' },
+        { name: 'iPhone SE (1-го поколения)', display: '4.0" Retina', chip: 'A9', camera: '12 МП Live Photos', body: 'Корпус iPhone 5s со скошенными гранями', accent: '#f472b6', cams: 1, island: false, notch: false, homeBtn: true, color: '#3b0764', tagline: 'Флагманская начинка iPhone 6s в любимом всеми 4-дюймовом корпусе.' },
+        { name: 'iPhone SE (2020 / 2022)', display: '4.7" Retina HD', chip: 'A13 / A15 Bionic (5G)', camera: '12 МП Smart HDR 4', body: 'Стекло и алюминий, Touch ID', accent: '#ef4444', cams: 1, island: false, notch: false, homeBtn: true, color: '#450a0a', tagline: 'Классика с кнопкой Touch ID и современными флагманскими процессорами внутри.' }
+      ]
+    },
+    {
+      id: 'iphone-6s-6', year: '2014–2015', era: 'classic', family: 'iPhone 6 / 6s', chip: 'Apple A8 / A9',
+      variants: [
+        { name: 'iPhone 6', display: '4.7" Retina HD', chip: 'A8 (64-bit)', camera: '8 МП Focus Pixels', body: 'Тонкий алюминий 6.9 мм, NFC', accent: '#cbd5e1', cams: 1, island: false, notch: false, homeBtn: true, color: '#27272a', tagline: 'Крупный редизайн с увеличением экрана до 4.7 дюйма и запуск Apple Pay.' },
+        { name: 'iPhone 6 Plus', display: '5.5" Full HD Retina', chip: 'A8', camera: '8 МП с оптической стабилизацией', body: 'Алюминий 7.1 мм', accent: '#94a3b8', cams: 1, island: false, notch: false, homeBtn: true, color: '#1e293b', tagline: 'Первый фаблет Apple с Full HD экраном и горизонтальным режимом интерфейса.' },
+        { name: 'iPhone 6s / 6s Plus', display: '4.7" / 5.5" 3D Touch', chip: 'A9 + 2 ГБ ОЗУ', camera: '12 МП, съёмка 4K видео', body: 'Алюминий серии 7000, Rose Gold', accent: '#f9a8d4', cams: 1, island: false, notch: false, homeBtn: true, color: '#4a1d34', tagline: 'Технология распознавания силы нажатия 3D Touch, Live Photos и первый iPhone со съёмкой в 4K.' }
+      ]
+    },
+    {
+      id: 'iphone-5-series', year: '2012–2013', era: 'classic', family: 'iPhone 5 / 5c / 5s', chip: 'Apple A6 / A7',
+      variants: [
+        { name: 'iPhone 5', display: '4.0" Retina (16:9)', chip: 'A6', camera: '8 МП панорамы', body: 'Анодированный алюминий, Lightning', accent: '#94a3b8', cams: 1, island: false, notch: false, homeBtn: true, color: '#18181b', tagline: 'Переход на 4-дюймовый экран, разъём Lightning и рекордно тонкий цельнометаллический корпус.' },
+        { name: 'iPhone 5c', display: '4.0" Retina', chip: 'A6', camera: '8 МП iSight', body: 'Глянцевый поликарбонат (5 цветов)', accent: '#4ade80', cams: 1, island: false, notch: false, homeBtn: true, color: '#14532d', tagline: 'Самый яркий и жизнерадостный iPhone в бесшовном корпусе из армированного поликарбоната.' },
+        { name: 'iPhone 5s', display: '4.0" Retina', chip: 'A7 (первый 64-бит в мире)', camera: '8 МП True Tone вспышка, Slo-Mo', body: 'Алюминий со сканером Touch ID', accent: '#eab308', cams: 1, island: false, notch: false, homeBtn: true, color: '#292524', tagline: 'Первый в мире 64-битный смартфон, дактилоскопический сканер Touch ID и цвет Space Gray.' }
+      ]
+    },
+    {
+      id: 'iphone-classic-era', year: '2007–2011', era: 'classic', family: 'iPhone 2G – 4S', chip: 'Samsung / Apple A4–A5',
+      variants: [
+        { name: 'iPhone (2G, 2007)', display: '3.5" Multi-Touch (320×480)', chip: '412 МГц ARM11', camera: '2.0 МП без автофокуса', body: 'Алюминий и чёрный пластик', accent: '#cbd5e1', cams: 1, island: false, notch: false, homeBtn: true, color: '#27272a', tagline: 'Устройство, с которого началась эра современных смартфонов: ёмкостный экран и полный отказ от стилуса.' },
+        { name: 'iPhone 3G / 3GS (2008–2009)', display: '3.5" HVGA', chip: '600 МГц Cortex-A8 (3GS)', camera: '3.0 МП автофокус + видео', body: 'Глянцевый изогнутый поликарбонат', accent: '#60a5fa', cams: 1, island: false, notch: false, homeBtn: true, color: '#09090b', tagline: 'Запуск App Store, сетей 3G и двукратный прирост скорости в легендарном поколении 3GS.' },
+        { name: 'iPhone 4 / 4S (2010–2011)', display: '3.5" Retina (326 ppi)', chip: 'Apple A4 / A5 + Siri', camera: '8 МП (4S) Full HD 1080p', body: 'Стекло и стальная рамка-антенна', accent: '#f8fafc', cams: 1, island: false, notch: false, homeBtn: true, color: '#18181b', tagline: 'Дисплей Retina, плотность пикселей выше порога глаза, стеклянный сэндвич и голосовой ассистент Siri.' }
+      ]
+    }
+  ];
+
+  // Состояние приложения
+  let currentEra = 'all';
+  let selectedFamily = IPHONE_DB[0];
+  let selectedVariant = IPHONE_DB[0].variants[3]; // По умолчанию iPhone 18 Pro Max
+
+  // Элементы интерфейса
+  const selectorScreen = document.getElementById('selector-screen');
+  const modelsGrid = document.getElementById('models-grid');
+  const variantsList = document.getElementById('variants-list');
+  const variantsCount = document.getElementById('variants-count');
+  const summaryTarget = document.getElementById('summary-target');
+  const summaryTagline = document.getElementById('summary-tagline');
+  const footerSpecs = document.getElementById('footer-specs');
+  const btnStart = document.getElementById('btn-start');
+
+  const presentationScreen = document.getElementById('presentation-screen');
+  const presentationHud = document.getElementById('presentation-hud');
+  const hudKicker = document.getElementById('hud-kicker');
+  const hudTitle = document.getElementById('hud-title');
+  const hudSubtitle = document.getElementById('hud-subtitle');
+  const hudBento = document.getElementById('hud-bento');
+  const timelineFill = document.getElementById('timeline-fill');
+
+  const btnClose = document.getElementById('btn-close');
+  const btnFreeze = document.getElementById('btn-freeze');
+  const iconPause = document.getElementById('icon-pause');
+  const iconPlay = document.getElementById('icon-play');
+  const freezeBadge = document.getElementById('freeze-badge');
+  const freezeText = document.getElementById('freeze-text');
+  const freezeTooltip = document.getElementById('freeze-tooltip');
+
+  // Рендер карточек поколений
+  function renderFamilies() {
+    modelsGrid.innerHTML = '';
+    const filtered = IPHONE_DB.filter(item => currentEra === 'all' || item.era === currentEra);
+
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'model-card' + (item.id === selectedFamily.id ? ' active' : '');
+      card.innerHTML = `
+        <span class="model-year">${item.year}</span>
+        <span class="model-name">${item.family}</span>
+        <span class="model-chip-mini">${item.chip}</span>
+      `;
+      card.addEventListener('click', () => {
+        selectedFamily = item;
+        selectedVariant = item.variants[item.variants.length - 1];
+        renderFamilies();
+        renderVariants();
+      });
+      modelsGrid.appendChild(card);
+    });
+  }
+
+  // Рендер модификаций выбранного поколения
+  function renderVariants() {
+    variantsList.innerHTML = '';
+    variantsCount.textContent = `${selectedFamily.variants.length} верс.`;
+
+    selectedFamily.variants.forEach(v => {
+      const pill = document.createElement('div');
+      pill.className = 'variant-pill' + (v.name === selectedVariant.name ? ' active' : '');
+      pill.innerHTML = `
+        <div class="variant-info">
+          <span class="variant-title">${v.name}</span>
+          <span class="variant-sub">${v.display} • ${v.chip}</span>
+        </div>
+        <div class="variant-dot"></div>
+      `;
+      pill.addEventListener('click', () => {
+        selectedVariant = v;
+        renderVariants();
+      });
+      variantsList.appendChild(pill);
+    });
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+    summaryTarget.textContent = selectedVariant.name;
+    summaryTagline.textContent = selectedVariant.tagline;
+    footerSpecs.innerHTML = `
+      <span>Дисплей: <strong>${selectedVariant.display}</strong></span>
+      <span>Процессор: <strong>${selectedVariant.chip}</strong></span>
+      <span>Камера: <strong>${selectedVariant.camera}</strong></span>
+    `;
+  }
+
+  // Фильтр эпох
+  document.getElementById('era-filter').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('era-btn')) return;
+    document.querySelectorAll('.era-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentEra = e.target.dataset.era;
+    renderFamilies();
+  });
+
+  // =========================================================================
+  // КИНЕМАТОГРАФИЧНЫЙ 60FPS ВИДЕО-РЕНДЕРЕР IPHONE НА HTML5 CANVAS
+  // =========================================================================
+  const canvas = document.getElementById('cinema-canvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  let rafId = null;
+  let isPresentationOpen = false;
+  let isFrozen = false;
+  let timelineTime = 0; // Накопленное время презентации в секундах (замирает при стоп-кадре)
+  let lastFrameTimestamp = 0;
+  let currentActIndex = -1;
+
+  // Частицы глубины для кинематографичной сцены
+  const particles = Array.from({ length: 55 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: 0.6 + Math.random() * 1.8,
+    speed: 0.008 + Math.random() * 0.018,
+    alpha: 0.1 + Math.random() * 0.45
+  }));
+
+  function resizeCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // Сценарий актов презентации (цикл 24 секунды, плавно сменяющий ракурсы и акценты)
+  function getActs(v, fam) {
+    return [
+      {
+        kicker: `Премьера ${fam.year} • ${fam.family}`,
+        title: v.name,
+        subtitle: v.tagline,
+        bento: [
+          { label: 'Дисплей', value: v.display.split(' ')[0] + ' ' + (v.display.split(' ')[1] || ''), desc: v.display },
+          { label: 'Архитектура', value: v.chip, desc: 'Нейронный движок Apple Silicon' },
+          { label: 'Оптика', value: v.camera.split(' ')[0] + ' ' + (v.camera.split(' ')[1] || ''), desc: v.camera },
+          { label: 'Материалы', value: v.body.split(',')[0], desc: v.body }
+        ]
+      },
+      {
+        kicker: 'Промышленный дизайн и дисплей',
+        title: 'Совершенство в каждой грани',
+        subtitle: `${v.display} с эталонной цветопередачей и мгновенным откликом интерфейса.`,
+        bento: [
+          { label: 'Матрица', value: v.display, desc: 'Высокая контрастность и антибликовое покрытие' },
+          { label: 'Корпус', value: v.body, desc: 'Прецизионная обработка на станках с ЧПУ' },
+          { label: 'Биометрия', value: v.homeBtn ? 'Touch ID' : 'Face ID', desc: v.homeBtn ? 'Сканер отпечатка в кнопке Home' : 'Система камер TrueDepth' },
+          { label: 'Экосистема', value: 'iOS', desc: 'Безупречная плавность системных анимаций' }
+        ]
+      },
+      {
+        kicker: 'Вычислительная мощь и камеры',
+        title: v.chip,
+        subtitle: `Профессиональная система съёмки ${v.camera} с интеллектуальной обработкой кадров в реальном времени.`,
+        bento: [
+          { label: 'Процессор', value: v.chip, desc: 'Максимальная энергоэффективность под нагрузкой' },
+          { label: 'Камера', value: v.camera, desc: 'Кинематографическая глубина и детализация' },
+          { label: 'Автономность', value: 'Весь день', desc: 'Интеллектуальное управление питанием' },
+          { label: 'Статус', value: fam.year, desc: 'Оригинальная спецификация Apple' }
+        ]
+      }
+    ];
+  }
+
+  function updateHUDForAct(actIdx) {    if (actIdx === currentActIndex) return;
+    currentActIndex = actIdx;
+
+    const acts = getActs(selectedVariant, selectedFamily);
+    const act = acts[actIdx % acts.length];
+
+    presentationHud.classList.remove('hud-visible');
+    setTimeout(() => {
+      if (!isPresentationOpen) return;
+      hudKicker.textContent = act.kicker;
+      hudTitle.textContent = act.title;
+      hudSubtitle.textContent = act.subtitle;
+      hudBento.innerHTML = act.bento.map(tile => `
+        <div class="spec-tile">
+          <div class="spec-tile-label">${tile.label}</div>
+          <div class="spec-tile-value">${tile.value}</div>
+          <div class="spec-tile-desc">${tile.desc}</div>
+        </div>
+      `).join('');
+      presentationHud.classList.add('hud-visible');
+    }, 180);
+  }
+
+  function drawRoundedRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // Главный цикл отрисовки кадра по времени t (в секундах)
+  function renderCinemaFrame(t) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const v = selectedVariant;
+
+    // 1. Глубокий кинематографичный фон с динамическим освещением
+    ctx.fillStyle = '#030305';
+    ctx.fillRect(0, 0, w, h);
+
+    const glowX = w * 0.68 + Math.sin(t * 0.65) * (w * 0.08);
+    const glowY = h * 0.44 + Math.cos(t * 0.45) * (h * 0.07);
+    const grad = ctx.createRadialGradient(glowX, glowY, 10, glowX, glowY, Math.max(w, h) * 0.55);
+    grad.addColorStop(0, hexToRgba(v.accent, 0.24));
+    grad.addColorStop(0.45, hexToRgba(v.color, 0.16));
+    grad.addColorStop(1, 'rgba(3, 3, 5, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. Тонкая световая сетка перспективы и частицы
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const py = ((p.y - t * p.speed) % 1 + 1) % 1;
+      const px = p.x + Math.sin(t * 0.5 + i) * 0.015;
+      ctx.beginPath();
+      ctx.arc(px * w, py * h, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * (0.6 + 0.4 * Math.sin(t * 2 + i))})`;
+      ctx.fill();
+    }
+
+    // 3. Кинематографичный рендер корпуса iPhone (справа от центра)
+    const cycle = t % 24;
+    const actIdx = Math.floor(cycle / 8);
+    updateHUDForAct(actIdx);
+
+    // Плавная интерполяция позиции, наклона и масштаба устройства
+    const phoneCenterX = w < 900 ? w * 0.5 : w * 0.72 + Math.sin(t * 0.7) * 16;
+    const phoneCenterY = w < 900 ? h * 0.42 : h * 0.46 + Math.cos(t * 0.9) * 12;
+    const tiltAngle = Math.sin(t * 0.55) * 0.075; // лёгкий парящий наклон
+    const breathScale = 1 + Math.sin(t * 0.8) * 0.022;
+
+    const phoneH = Math.min(h * 0.56, 470);
+    const phoneW = phoneH * (v.homeBtn ? 0.50 : 0.475);
+    const cornerR = v.homeBtn ? phoneW * 0.14 : phoneW * 0.175;
+
+    ctx.save();
+    ctx.translate(phoneCenterX, phoneCenterY);
+    ctx.rotate(tiltAngle);
+    ctx.scale(breathScale, breathScale);
+
+    // Мягкая тень под парящим смартфоном
+    ctx.shadowColor = hexToRgba(v.accent, 0.32);
+    ctx.shadowBlur = 70;
+    ctx.shadowOffsetY = 24;
+
+    // Внешняя титановая / стальная рамка корпуса
+    const frameGrad = ctx.createLinearGradient(-phoneW / 2, -phoneH / 2, phoneW / 2, phoneH / 2);
+    frameGrad.addColorStop(0, '#52525b');
+    frameGrad.addColorStop(0.3, '#e4e4e7');
+    frameGrad.addColorStop(0.5, '#3f3f46');
+    frameGrad.addColorStop(0.8, '#a1a1aa');
+    frameGrad.addColorStop(1, '#27272a');
+
+    drawRoundedRect(ctx, -phoneW / 2 - 4, -phoneH / 2 - 4, phoneW + 8, phoneH + 8, cornerR + 3);
+    ctx.fillStyle = frameGrad;
+    ctx.fill();
+
+    // Сброс тени для внутренних элементов
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Чёрная рамка дисплея (Bezel)
+    drawRoundedRect(ctx, -phoneW / 2, -phoneH / 2, phoneW, phoneH, cornerR);
+    ctx.fillStyle = '#070709';
+    ctx.fill();
+
+    // Активная область экрана
+    const bezelSide = v.homeBtn ? phoneW * 0.065 : phoneW * 0.036;
+    const bezelTop = v.homeBtn ? phoneH * 0.115 : phoneW * 0.036;
+    const bezelBottom = v.homeBtn ? phoneH * 0.115 : phoneW * 0.036;
+
+    const scrX = -phoneW / 2 + bezelSide;
+    const scrY = -phoneH / 2 + bezelTop;
+    const scrW = phoneW - bezelSide * 2;
+    const scrH = phoneH - bezelTop - bezelBottom;
+    const scrR = v.homeBtn ? 4 : cornerR - bezelSide;
+
+    ctx.save();
+    drawRoundedRect(ctx, scrX, scrY, scrW, scrH, scrR);
+    ctx.clip();
+
+    // Живые фирменные обои на экране iPhone (перетекающие волны)
+    const wallGrad = ctx.createLinearGradient(scrX, scrY, scrX + scrW, scrY + scrH);
+    wallGrad.addColorStop(0, '#05070e');
+    wallGrad.addColorStop(0.5, v.color);
+    wallGrad.addColorStop(1, '#020204');
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(scrX, scrY, scrW, scrH);
+
+    // Световые сферы внутри экрана
+    for (let k = 0; k < 3; k++) {
+      const orbX = scrX + scrW * (0.5 + 0.35 * Math.sin(t * (0.9 + k * 0.3) + k * 2));
+      const orbY = scrY + scrH * (0.48 + 0.28 * Math.cos(t * (0.7 + k * 0.25) + k));
+      const orbR = scrW * (0.48 - k * 0.08);
+      const orbGrad = ctx.createRadialGradient(orbX, orbY, 2, orbX, orbY, orbR);
+      orbGrad.addColorStop(0, hexToRgba(v.accent, 0.65 - k * 0.15));
+      orbGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = orbGrad;
+      ctx.fillRect(scrX, scrY, scrW, scrH);
+    }
+
+    // Время на экране блокировки iOS
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.font = `700 ${Math.round(scrW * 0.24)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('09:41', 0, scrY + scrH * 0.24);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = `500 ${Math.round(scrW * 0.055)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.fillText(v.name, 0, scrY + scrH * 0.295);
+
+    // Стеклянный блик по диагонали экрана (движется во времени)
+    const sheenPos = ((t * 0.28) % 2) - 0.5;
+    const sheenGrad = ctx.createLinearGradient(
+      scrX + scrW * sheenPos - scrW * 0.4, scrY,
+      scrX + scrW * sheenPos + scrW * 0.4, scrY + scrH
+    );
+    sheenGrad.addColorStop(0, 'rgba(255,255,255,0)');
+    sheenGrad.addColorStop(0.5, 'rgba(255,255,255,0.12)');
+    sheenGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sheenGrad;
+    ctx.fillRect(scrX, scrY, scrW, scrH);
+
+    // Dynamic Island или Чёлка (Notch)
+    if (v.island) {
+      const pillW = scrW * (0.28 + 0.03 * Math.sin(t * 1.8));
+      const pillH = scrH * 0.034;
+      drawRoundedRect(ctx, -pillW / 2, scrY + scrH * 0.022, pillW, pillH, pillH / 2);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+      // Линза фронтальной камеры в острове
+      ctx.beginPath();
+      ctx.arc(pillW * 0.28, scrY + scrH * 0.022 + pillH / 2, pillH * 0.22, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+    } else if (v.notch) {
+      const notchW = scrW * 0.46;
+      const notchH = scrH * 0.036;
+      drawRoundedRect(ctx, -notchW / 2, scrY - 4, notchW, notchH + 4, 10);
+      ctx.fillStyle = '#070709';
+      ctx.fill();
+    }
+
+    // Полоска Home Indicator для безрамочных моделей
+    if (!v.homeBtn) {
+      const barW = scrW * 0.36;
+      drawRoundedRect(ctx, -barW / 2, scrY + scrH - 10, barW, 3.5, 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.fill();
+    }
+
+    ctx.restore(); // выход из clip экрана
+
+    // Классическая кнопка Home / Touch ID для моделей 2007–2022 SE
+    if (v.homeBtn) {
+      const btnR = phoneW * 0.072;
+      const btnY = phoneH / 2 - bezelBottom / 2;
+      ctx.beginPath();
+      ctx.arc(0, btnY, btnR, 0, Math.PI * 2);
+      ctx.fillStyle = '#0d0d11';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#71717a';
+      ctx.stroke();
+    }
+
+    // Блок камер рядом (силуэт задней панели в полупрозрачном стеклянном модуле слева от телефона)
+    drawCameraModuleBadge(ctx, -phoneW * 0.72, -phoneH * 0.18, v);
+
+    ctx.restore();
+
+    // Обновление прогресс-бара презентации
+    const progressPct = ((t % 24) / 24) * 100;
+    timelineFill.style.width = `${progressPct}%`;
+  }
+
+  // Отрисовка модуля камер выбранной модели iPhone
+  function drawCameraModuleBadge(ctx, x, y, v) {
+    const size = 76;
+    ctx.save();
+    ctx.translate(x, y);
+
+    drawRoundedRect(ctx, -size / 2, -size / 2, size, size, 20);
+    ctx.fillStyle = 'rgba(18, 18, 24, 0.78)';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.stroke();
+
+    const drawLens = (lx, ly, lr) => {
+      ctx.beginPath();
+      ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+      ctx.fillStyle = '#09090b';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#52525b';
+      ctx.stroke();
+
+      const lensGrad = ctx.createRadialGradient(lx - lr * 0.25, ly - lr * 0.25, 1, lx, ly, lr * 0.7);
+      lensGrad.addColorStop(0, hexToRgba(v.accent, 0.75));
+      lensGrad.addColorStop(0.6, '#0f172a');
+      lensGrad.addColorStop(1, '#000');
+      ctx.beginPath();
+      ctx.arc(lx, ly, lr * 0.62, 0, Math.PI * 2);
+      ctx.fillStyle = lensGrad;
+      ctx.fill();
+    };
+
+    if (v.cams === 3) {      drawLens(-16, -16, 13);
+      drawLens(-16, 16, 13);
+      drawLens(16, 0, 13);
+    } else if (v.cams === 2) {
+      drawLens(-14, -14, 13);
+      drawLens(14, 14, 13);
+    } else {
+      drawLens(0, 0, 16);
+    }
+
+    ctx.restore();
+  }
+
+  function hexToRgba(hex, alpha) {
+    const clean = hex.replace('#', '');
+    const bigint = parseInt(clean, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // Главный цикл анимации requestAnimationFrame
+  function animationLoop(timestamp) {
+    if (!isPresentationOpen) return;
+
+    if (!lastFrameTimestamp) lastFrameTimestamp = timestamp;
+    const deltaSec = Math.min((timestamp - lastFrameTimestamp) / 1000, 0.05); // защита от скачков при переключении вкладок
+    lastFrameTimestamp = timestamp;
+
+    // Если стоп-кадр НЕ активен — время идёт плавно; если активен — кадр замирает точно на месте
+    if (!isFrozen) {
+      timelineTime += deltaSec;
+    }
+
+    renderCinemaFrame(timelineTime);
+    rafId = requestAnimationFrame(animationLoop);
+  }
+
+  // Запуск презентации
+  function openPresentation() {
+    resizeCanvas();
+    isPresentationOpen = true;
+    isFrozen = false;
+    timelineTime = 0;
+    lastFrameTimestamp = 0;
+    currentActIndex = -1;
+
+    updateFreezeUI();
+
+    selectorScreen.classList.add('hidden');
+    presentationScreen.classList.add('active');
+
+    rafId = requestAnimationFrame(animationLoop);
+  }
+
+  // Закрытие презентации (по крестику)
+  function closePresentation() {
+    isPresentationOpen = false;
+    isFrozen = false;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    presentationScreen.classList.remove('active');
+    presentationHud.classList.remove('hud-visible');
+    selectorScreen.classList.remove('hidden');
+  }
+
+  // Переключение остановки презентации на текущем кадре
+  function toggleFreezeFrame() {
+    if (!isPresentationOpen) return;
+    isFrozen = !isFrozen;
+    lastFrameTimestamp = performance.now();
+    updateFreezeUI();
+  }
+
+  function updateFreezeUI() {
+    if (isFrozen) {
+      btnFreeze.classList.add('paused-active');
+      iconPause.style.display = 'none';
+      iconPlay.style.display = 'block';
+      freezeBadge.classList.add('frozen');
+      freezeText.textContent = `Стоп-кадр • ${timelineTime.toFixed(2)} сек`;
+      freezeTooltip.textContent = 'Продолжить презентацию';
+    } else {
+      btnFreeze.classList.remove('paused-active');
+      iconPause.style.display = 'block';
+      iconPlay.style.display = 'none';
+      freezeBadge.classList.remove('frozen');
+      freezeText.textContent = 'Воспроизведение • 60 FPS';
+      freezeTooltip.textContent = 'Стоп-кадр (Пауза)';
+    }
+  }
+
+  btnStart.addEventListener('click', openPresentation);
+  btnClose.addEventListener('click', closePresentation);
+  btnFreeze.addEventListener('click', toggleFreezeFrame);
+
+  // Горячие клавиши: Space — стоп-кадр, Escape — закрыть
+  window.addEventListener('keydown', (e) => {
+    if (!isPresentationOpen) return;
+    if (e.code === 'Escape') {
+      closePresentation();
+    } else if (e.code === 'Space') {
+      e.preventDefault();
+      toggleFreezeFrame();
+    }
+  });
+
+  // Инициализация стартового экрана
+  renderFamilies();
+  renderVariants();
+})();
+</script>
+</body>
+</html>
